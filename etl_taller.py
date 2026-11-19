@@ -642,10 +642,10 @@ print(f" Total del resumen: {total_summary}")
 # Comparar con tolerancia pequeña por decimales
 diff = abs(float(total_detail or 0) - float(total_summary or 0))
 if diff < 0.01:
-    print(" ✓ QA 1 PASSED: Los totales coinciden")
+    print(" [OK] QA 1 PASSED: Los totales coinciden")
     qa1_result = "PASSED"
 else:
-    print(f" ✗ QA 1 FAILED: Diferencia de {diff}")
+    print(f" [ERROR] QA 1 FAILED: Diferencia de {diff}")
     qa1_result = "FAILED"
 
 # QA 2: Verificar duplicados en line_id (antes deduplicar para evitar errores de joins)
@@ -658,10 +658,10 @@ dup_check = sales_final_dedup.groupBy("line_id").count().filter(F.col("count") >
 dup_count = dup_check.count()
 print(f" Duplicados encontrados: {dup_count}")
 if dup_count == 0:
-    print(" ✓ QA 2 PASSED: No hay duplicados en line_id")
+    print(" [OK] QA 2 PASSED: No hay duplicados en line_id")
     qa2_result = "PASSED"
 else:
-    print(f" ✗ QA 2 FAILED: {dup_count} duplicados encontrados")
+    print(f" [ERROR] QA 2 FAILED: {dup_count} duplicados encontrados")
     dup_check.show(truncate=False)
     qa2_result = "FAILED"
 
@@ -687,19 +687,19 @@ if os.path.exists(OUTPUT_PATH):
 print("\n--- Guardando sales_detail ---")
 sales_final_pd = sales_final.toPandas()
 sales_final_pd.to_csv(f"{OUTPUT_PATH}/sales_detail.csv", index=False)
-print(" ✓ sales_detail guardado")
+print(" [OK] sales_detail guardado")
 
 # Guardar sales_summary
 print("\n--- Guardando sales_summary ---")
 sales_summary_pd = sales_summary.toPandas()
 sales_summary_pd.to_csv(f"{OUTPUT_PATH}/sales_summary.csv", index=False)
-print(" ✓ sales_summary guardado")
+print(" [OK] sales_summary guardado")
 
 # Guardar orders_final
 print("\n--- Guardando orders_final ---")
 orders_final_pd = orders_final.select("order_id", "customer_id", "order_ts", "status", "channel", "updated_at").toPandas()
 orders_final_pd.to_csv(f"{OUTPUT_PATH}/orders_final.csv", index=False)
-print(" ✓ orders_final guardado")
+print(" [OK] orders_final guardado")
 
 # Guardar sales_incremental (solo datos incrementales)
 print("\n--- Guardando sales_incremental ---")
@@ -708,14 +708,14 @@ sales_inc_final_pd = sales_inc_final.select(
     "quantity", "unit_price", "discount_pct", "net_amount", "country"
 ).toPandas()
 sales_inc_final_pd.to_csv(f"{OUTPUT_PATH}/sales_incremental.csv", index=False)
-print(" ✓ sales_incremental guardado")
+print(" [OK] sales_incremental guardado")
 
 # Guardar reporte de anomalías
 print("\n--- Guardando reporte de anomalías ---")
 import json
 anomalias_df = pd.DataFrame(anomalias)
 anomalias_df.to_csv(f"{OUTPUT_PATH}/anomalias_report.csv", index=False)
-print(" ✓ anomalias_report guardado")
+print(" [OK] anomalias_report guardado")
 
 # Listar archivos generados
 print("\n=== ARCHIVOS GENERADOS EN OUTPUT ===")
