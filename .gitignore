@@ -1,5 +1,4 @@
-# Datos generados
-output/
+# Archivos generados por Python
 __pycache__/
 *.pyc
 *.pyo
@@ -10,10 +9,10 @@ venv/
 .venv/
 *.log
 .ipynb_checkpoints
-.DS_Store
-Thumbs.db
 
 # Archivos del sistema
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
 *.swp
@@ -22,17 +21,18 @@ Thumbs.db
 # Archivos temporales
 *.tmp
 *.temp
+etl_output.txt
 
 # Configuración específica de Windows
 c:/hadoop/
 winutils/
 hadoop.dll
 
-# Archivos de datos (excepto los originales necesarios)
-data/orders_incremental.jsonl
-data/order_items_incremental.jsonl
-data/*.csv
-!data/README.md
+# Output del ETL (resultados generados)
+output/*.csv
+output/quarantine_*
+output/test_*
 
-# Output generado por el ETL
-etl_output.txt
+# Mantener estructura de directorios
+!output/.gitkeep
+!data/.gitkeep

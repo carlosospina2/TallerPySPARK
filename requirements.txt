@@ -1,0 +1,7 @@
+# Requisitos del proyecto Taller PySpark
+pyspark==4.3.0
+pandas>=2.0.0,<3.0.0
+openpyxl>=3.0.0
+
+# Opcional para análisis adicional
+numpy>=1.24.0
