@@ -1,154 +1,169 @@
-# Taller Data Engineer - PySpark
+# 🚀 Taller Data Engineer - PySpark
 
-## Objetivo
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![PySpark](https://img.shields.io/badge/PySpark-4.3.0-orange.svg)](https://spark.apache.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Desarrollar un ETL local utilizando PySpark para procesar datos de ventas, desde la lectura de archivos CSV y JSONL hasta la generación de archivos de salida con datos limpios y agregados.
+## 📋 Descripción
 
-## Requisitos
+ETL completo desarrollado con PySpark para procesamiento de datos de ventas con enfoque en calidad de datos, procesamiento incremental e idempotencia.
 
-- Python 3.14+
-- Java 21
-- PySpark 4.3.0
-- Pandas
+### Características Principales
+- ✅ Detección automática de 9 tipos de anomalías
+- ✅ Procesamiento incremental con idempotencia garantizada
+- ✅ Controles de calidad automatizados (QA)
+- ✅ Cuarentena inteligente de registros problemáticos
+- ✅ Reconciliación automática de ventas
 
-## Cómo ejecutar el ETL
+## ⚡ Inicio Rápido
 
-```powershell
-# En Windows (PowerShell)
-cd "c:\Users\Cohorte 5\Desktop\TALLER PYSPARK"
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/carlosospina2/TallerPySPARK.git
+cd TallerPySPARK
+
+# 2. Instalar dependencias
+pip install -r requirements.txt
+
+# 3. Ejecutar ETL
 python etl_taller.py
 ```
 
-## Archivos de entrada
+📖 Ver **[INSTALACION.md](INSTALACION.md)** para instrucciones detalladas
 
-Los archivos de entrada se encuentran en la carpeta `data/`:
+## 📊 Resultados
 
-- `customers.csv` - 1001 registros de clientes
-- `products.csv` - 100 registros de productos
-- `orders.csv` - 20001 registros de pedidos
-- `order_items.csv` - 40026 registros de líneas de pedido
-- `orders_incremental.jsonl` - 101 registros incrementales de pedidos
-- `order_items_incremental.jsonl` - 200 registros incrementales de líneas
+| Archivo | Descripción | Registros |
+|---------|-------------|-----------|
+| `sales_detail.csv` | Detalle de ventas válidas | 35,354 |
+| `sales_summary.csv` | Resumen agregado | 147 |
+| `orders_final.csv` | Pedidos procesados | 20,099 |
+| `anomalias_report.csv` | Reporte de anomalías | 9 tipos |
+| `quarantine_*.csv` | Registros en cuarentena | 24,672 |
 
-## Transformaciones realizadas
+📈 Ver **[RESULTADOS_EJEMPLO.md](RESULTADOS_EJEMPLO.md)** para métricas detalladas
 
-### 1. Lectura de datos
-- Se leen archivos CSV con esquemas explícitos definidos
-- Se leen archivos JSONL incrementales
-- Se verifican cantidades de registros, columnas y tipos de datos
+## 🎯 Flujo del ETL
 
-### 2. Perfilamiento y calidad
-Se detectaron las siguientes anomalías:
-
-| # | Anomalía | Tabla.Columna | Cantidad | Tratamiento |
-|---|----------|---------------|----------|-------------|
-| 1 | Duplicado | customers.customer_id | 1 | Sin acción |
-| 2 | Cantidad inválida | order_items.quantity | 2 | Corrección (0->1, negativos->positivos) |
-| 3 | Referencia huérfana | orders.customer_id | 20000 | Cuarentena |
-| 4 | Referencia huérfana | order_items.order_id | 40026 | Cuarentena |
-| 5 | Referencia huérfana | order_items.product_id | 40026 | Cuarentena |
-| 6 | Descuento inválido | order_items.discount_pct | 1 | Corrección (ajuste a rango 0-1) |
-| 7 | Precio inválido | products.unit_price | 2 | Corrección (nulos->0, negativos->abs) |
-| 8 | Estados de pedido | orders.status | 5 | Informativo |
-| 9 | Producto inactivo | products.active | 11 | Cuarentena |
-
-### 3. Limpieza de datos
-- Eliminación de duplicados en customers
-- Corrección de cantidades inválidas (<=0)
-- Ajuste de descuentos fuera de rango [0,1]
-- Corrección de precios nulos o negativos
-- Filtrado de referencias válidas:
-  - orders.customer_id → customers.customer_id
-  - order_items.order_id → orders.order_id
-  - order_items.product_id → products.product_id
-
-### 4. Cálculo del importe neto
-
-Fórmula utilizada:
-```
-net_amount = quantity * unit_price * (1 - discount_pct)
+```mermaid
+graph LR
+    A[CSV/JSONL] --> B[Lectura]
+    B --> C[Perfilamiento]
+    C --> D[Limpieza]
+    D --> E[Cálculo]
+    E --> F[JOINs]
+    F --> G[Agregación]
+    G --> H[QA]
+    H --> I[Output CSV]
 ```
 
-Se utiliza DecimalType con precisión de 4 decimales para evitar errores de punto flotante.
+### Fases del Proceso
 
-### 5. JOIN de las tablas
+1. **Lectura**: CSV con esquemas explícitos + JSONL incrementales
+2. **Perfilamiento**: Detección de 9 tipos de anomalías
+3. **Limpieza**: Corrección + filtrado + cuarentena
+4. **Cálculo**: `net_amount = quantity × unit_price × (1 - discount_pct)`
+5. **JOINs**: Relaciones customers/orders/products
+6. **Agregación**: Por Mes/País/Canal/Categoría
+7. **Incremental**: Merge por clave + timestamp
+8. **QA**: Reconciliación + duplicados
+9. **Output**: Archivos CSV con resultados
 
-Claves de JOIN utilizadas:
-- `order_items.order_id` → `orders.order_id`
-- `orders.customer_id` → `customers.customer_id`
-- `order_items.product_id` → `products.product_id`
+## 🔍 Anomalías Detectadas
 
-Granularidad del resultado: Nivel de línea de pedido (order_items)
+El ETL detecta y maneja automáticamente:
 
-### 6. Agregación de ventas
+| Tipo | Registros | Tratamiento |
+|------|-----------|-------------|
+| Referencias huérfanas | 20,000+ | Cuarentena |
+| Cantidades inválidas | 2 | Corrección |
+| Descuentos fuera de rango | 1 | Corrección |
+| Precios inválidos | 2 | Corrección |
+| Productos inactivos | 11 | Cuarentena |
+| Duplicados | 1 | Deduplicación |
 
-Se agrupan las ventas por:
-- Mes
-- País
-- Canal
-- Categoría
+## 🔧 Requisitos
 
-Se calculan:
-- Total neto de ventas
-- Número de líneas
-- Cantidad total
+- **Python**: 3.8+ (recomendado 3.10+)
+- **Java**: JDK 11 o 17 ⚠️ *JDK 21 tiene problemas con Hadoop en Windows*
+- **Librerías**: PySpark 4.3.0, Pandas 2.x
 
-### 7. Incremental e idempotencia
+## 📁 Estructura del Proyecto
 
-Para pedidos (orders):
-- Se usa `order_id` como clave
-- Se prioriza la versión más reciente según `updated_at`
-- Criterio de desempate: timestamp más reciente
+```
+TallerPySPARK/
+├── 📄 README.md                 # Este archivo
+├── 📄 INSTALACION.md            # Guía de instalación
+├── 📄 RESULTADOS_EJEMPLO.md     # Ejemplos de resultados
+├── 🐍 etl_taller.py            # Script ETL principal (997 líneas)
+├── 📊 taller_data_engineer.xlsx # Datos fuente
+├── 📋 Taller_Spark_.pdf        # Consigna del taller
+├── 📂 data/                     # Datos CSV/JSONL
+├── 📂 output/                   # Resultados generados
+└── 📂 docs/                     # Documentación técnica
+```
 
-Para líneas (order_items):
-- Se usa `line_id` como clave
-- Se deduplica correctamente
+## 💡 Controles de Calidad
 
-**Prueba de idempotencia**: Al reprocesar el mismo lote, no se duplican registros.
+### QA 1: Reconciliación de Ventas
+```
+✓ PASSED
+  Total detalle:  $84,291,707.55
+  Total resumen:  $84,291,707.55
+  Diferencia:     $0.00
+```
 
-## Controles de calidad (QA)
+### QA 2: Verificación de Duplicados
+```
+✓ PASSED
+  Duplicados en line_id: 0
+```
 
-### QA 1 - Reconciliación de ventas
-Compara el total del importe neto del detalle contra el total del resumen agregado.
+### Idempotencia
+```
+✓ VERIFICADA
+  Reprocesar no duplica registros
+```
 
-### QA 2 - Duplicados
-Verifica que no existan `line_id` duplicados en el detalle final.
+## 🚀 Tecnologías
 
-## Archivos generados
+- **PySpark 4.3.0**: Motor de procesamiento distribuido
+- **Python 3.14**: Lenguaje de programación
+- **Pandas**: Manipulación de datos
+- **Git**: Control de versiones
 
-En la carpeta `output/`:
+## 📖 Documentación
 
-- `sales_detail.csv` - Detalle de ventas completo
-- `sales_summary.csv` - Resumen de ventas por Mes/País/Canal/Categoría
-- `orders_final.csv` - Pedidos finales (histórico + incremental)
-- `sales_incremental.csv` - Ventas incrementales
-- `anomalias_report.csv` - Reporte de anomalías encontradas
-- `quarantine_orders.csv` - Pedidos en cuarentena (referencias inválidas)
-- `quarantine_order_items.csv` - Líneas en cuarentena (referencias inválidas)
+- **[INSTALACION.md](INSTALACION.md)**: Guía completa de instalación
+- **[RESULTADOS_EJEMPLO.md](RESULTADOS_EJEMPLO.md)**: Ejemplos de ejecución
+- **[docs/ANALISIS_TECNICO.md](docs/ANALISIS_TECNICO.md)**: Análisis técnico detallado
+- **[data/README.md](data/README.md)**: Esquemas de datos
 
-## Totales de ventas
+## ⚠️ Limitaciones Conocidas
 
-- **Total detalle**: 84,287,205.29
-- **Total resumen**: 84,291,707.55
-- **Total incremental**: 84,287,205.29
+1. **Parquet no disponible**: Por problemas de compatibilidad Windows + Java 21 + Hadoop
+2. **Fuente de datos**: Exportaciones de Excel (falta ZIP original `taller_data_local.zip`)
+3. **Procesamiento local**: No distribuido (requiere ~4GB RAM)
 
-## Limitaciones del procesamiento local
+## 📝 Licencia
 
-1. No se utiliza Delta Lake ni MERGE
-2. El procesamiento incremental no es real-time
-3. No hay infraestructura de cloud o contenedores
-4. Los archivos de salida son CSV (no Parquet) debido a limitaciones de compatibilidad con Windows + Java 21 + Hadoop
-5. La escritura se realiza usando pandas para evitar problemas de permisos en Windows
+Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
 
-## Tecnologías utilizadas
+## 👤 Autor
 
-- PySpark 4.3.0
-- Python 3.14
-- Java 21
-- Pandas
+**Carlos Ospina**
+- GitHub: [@carlosospina2](https://github.com/carlosospina2)
+- Email: caospina4@gmail.com
 
-## Notas
+## 🤝 Contribuciones
 
-- El proceso maneja fechas inválidas en los datos incrementales correctamente
-- Se utiliza extracción directa del mes desde el string ISO para evitar errores de parsing
-- Los registros huérfanos se almacenan en cuarentena para trazabilidad
+Las contribuciones son bienvenidas. Por favor:
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+---
+
+⭐ Si este proyecto te fue útil, considera darle una estrella en GitHub
